@@ -1,40 +1,33 @@
 import * as React from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { Link, RouteComponentProps } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { ApplicationState } from '../store';
+import Auth from './Auth';
+import * as NavMenuStore from '../store/NavMenu';
 
-export class NavMenu extends React.Component<{}, {}> {
+type NavMenuProps =
+    NavMenuStore.NavMenuState
+    & typeof NavMenuStore.actionCreators
+    & RouteComponentProps<{}>;
+
+class NavMenu extends React.Component<NavMenuProps, {}> {
+
     public render() {
-        return <div className='main-nav'>
-                <div className='navbar navbar-inverse'>
-                <div className='navbar-header'>
-                    <button type='button' className='navbar-toggle' data-toggle='collapse' data-target='.navbar-collapse'>
-                        <span className='sr-only'>Toggle navigation</span>
-                        <span className='icon-bar'></span>
-                        <span className='icon-bar'></span>
-                        <span className='icon-bar'></span>
-                    </button>
-                    <Link className='navbar-brand' to={ '/' }>SmartHotel_public_web</Link>
-                </div>
-                <div className='clearfix'></div>
-                <div className='navbar-collapse collapse'>
-                    <ul className='nav navbar-nav'>
-                        <li>
-                            <NavLink exact to={ '/' } activeClassName='active'>
-                                <span className='glyphicon glyphicon-home'></span> Home
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink to={ '/counter' } activeClassName='active'>
-                                <span className='glyphicon glyphicon-education'></span> Counter
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink to={ '/fetchdata' } activeClassName='active'>
-                                <span className='glyphicon glyphicon-th-list'></span> Fetch data
-                            </NavLink>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+        return <div className={`sh-nav_menu ${this.props.isHome ? 'is-home' : ''}`}>
+            <Link to={'/'} className='sh-nav_menu-container'>
+                <img className={`sh-nav_menu-logo ${this.props.isHome ? 'is-home' : ''}`} src='/assets/images/logo.svg' />
+            </Link>
+            <ul className='sh-nav_menu-links'>
+                <Auth />
+            </ul>
         </div>;
     }
+    public componentDidMount() {
+        this.props.listen(this.props.history);
+    }
 }
+
+export default connect(
+    (state: ApplicationState) => state.nav,
+    NavMenuStore.actionCreators
+)(NavMenu) as typeof NavMenu;

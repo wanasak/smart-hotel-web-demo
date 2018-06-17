@@ -1,3 +1,6 @@
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@model SmartHotel_public_web.Models.Settings.ServerSettings
 @{
     ViewData["Title"] = "Home Page";
 }
@@ -5,5 +8,8 @@
 <div id="react-app" asp-prerender-module="ClientApp/dist/main-server">Loading...</div>
 
 @section scripts {
+    <script>
+        window.settings = JSON.parse('@Html.Raw(JsonConvert.SerializeObject(Model, Formatting.None, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }))');
+    </script>
     <script src="~/dist/main-client.js" asp-append-version="true"></script>
 }

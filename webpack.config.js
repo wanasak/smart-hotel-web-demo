@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const CheckerPlugin = require('awesome-typescript-loader').CheckerPlugin;
 const merge = require('webpack-merge');
+const sassLintPlugin = require('sasslint-webpack-plugin');
 
 module.exports = (env) => {
     const isDevBuild = !(env && env.prod);
@@ -17,6 +18,7 @@ module.exports = (env) => {
         },
         module: {
             rules: [
+                { test: /\.tsx?$/, enforce: 'pre', loader: 'tslint-loader', options: { configFile: '.ts-lint.json' } },
                 { test: /\.tsx?$/, include: /ClientApp/, use: 'awesome-typescript-loader?silent=true' },
                 { test: /\.(png|jpg|jpeg|gif|svg)$/, use: 'url-loader?limit=25000' }
             ]
@@ -30,7 +32,7 @@ module.exports = (env) => {
         entry: { 'main-client': './ClientApp/boot-client.tsx' },
         module: {
             rules: [
-                { test: /\.css$/, use: ExtractTextPlugin.extract({ use: isDevBuild ? 'css-loader' : 'css-loader?minimize' }) }
+                { test: /\.scss$/, use: ExtractTextPlugin.extract({ use: isDevBuild ? ['css-loader', 'postcss-loader', 'sass-loader'] : ['css-loader?minimize', 'postcss-loader', 'sass-loader'] }) }
             ]
         },
         output: { path: path.join(__dirname, clientBundleOutputDir) },
@@ -39,7 +41,12 @@ module.exports = (env) => {
             new webpack.DllReferencePlugin({
                 context: __dirname,
                 manifest: require('./wwwroot/dist/vendor-manifest.json')
-            })
+            }),
+            new webpack.DefinePlugin({
+                'process.env': {
+                    IS_BROWSER: true
+                },
+            }),
         ].concat(isDevBuild ? [
             // Plugins that apply in development builds only
             new webpack.SourceMapDevToolPlugin({
@@ -47,9 +54,9 @@ module.exports = (env) => {
                 moduleFilenameTemplate: path.relative(clientBundleOutputDir, '[resourcePath]') // Point sourcemap entries to the original file locations on disk
             })
         ] : [
-            // Plugins that apply in production builds only
-            new webpack.optimize.UglifyJsPlugin()
-        ])
+                // Plugins that apply in production builds only
+                //new webpack.optimize.UglifyJsPlugin()
+            ])
     });
 
     // Configuration for server-side (prerendering) bundle suitable for running in Node
@@ -62,7 +69,13 @@ module.exports = (env) => {
                 manifest: require('./ClientApp/dist/vendor-manifest.json'),
                 sourceType: 'commonjs2',
                 name: './vendor'
-            })
+            }),
+            new sassLintPlugin({
+                configFile: '.sass-lint.yml',
+                glob: 'ClientApp/**/*.s?(a|c)ss',
+                failOnError: false
+            }),
+            new webpack.ProvidePlugin({ window: 'global' }),
         ],
         output: {
             libraryTarget: 'commonjs',

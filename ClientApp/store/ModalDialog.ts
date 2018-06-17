@@ -30,7 +30,7 @@ export const actionCreator = {
         let state = getState().modalDialog;
         dispatch({ type: 'INIT_ACTION' });
     },
-    opne: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
+    open: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
         dispatch({ type: 'OPEN_MODAL_ACTION' });
     },
     close: (): AppThunkAction<KnownAction> => (dispatch, getState) => {

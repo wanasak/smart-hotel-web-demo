@@ -1,12 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.AspNetCore;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.SnapshotCollector;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using SmartHotel_public_web.Models.Settings;
+using SmartHotel_public_web.Services;
 
 namespace SmartHotel_public_web
 {
@@ -23,6 +25,19 @@ namespace SmartHotel_public_web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+
+            services.Configure<LocalSettings>(Configuration);
+            services.AddSingleton<SettingsService>( (sp) => SettingsService.Load(sp.GetService<IOptions<LocalSettings>>().Value));
+            services.AddSingleton<ITelemetryProcessorFactory>(new SnapshotCollectorTelemetryProcessorFactory());
+
+            // Our custom services
+            if (!string.IsNullOrEmpty(Configuration["USE_NULL_TESTIMONIALS_SERVICE"]))
+            {
+                services.AddSingleton<ICustomerTestimonialService>(new NullCustomerTestimonialService());
+            } else
+            {
+                services.AddSingleton<ICustomerTestimonialService, PositiveTweetService>();
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,5 +70,12 @@ namespace SmartHotel_public_web
                     defaults: new { controller = "Home", action = "Index" });
             });
         }
+
+        private class SnapshotCollectorTelemetryProcessorFactory : ITelemetryProcessorFactory
+        {
+            public ITelemetryProcessor Create(ITelemetryProcessor next) =>
+                new SnapshotCollectorTelemetryProcessor(next);
+        }
+
     }
 }

@@ -179,7 +179,7 @@ export const actionCreators = {
         dispatch({ type: 'REQUEST_ROOM_ACTION' });
     },
     requestReviews: (id: number): AppThunkAction<KnownAction> => (dispatch, getState) => {
-        let fetchTask = fetch(`${settings.urls.reviews}/reviews/hotel/${id}`)
+        let fetchTask = fetch(`${settings.urls.reviews}reviews/hotel/${id}`)
             .then(response => response.json() as Promise<Review[]>)
             .then(data => {
                 dispatch({ type: 'RECEIVE_REVIEWS_ACTION', reviews: data });

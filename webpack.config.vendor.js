@@ -18,14 +18,21 @@ module.exports = (env) => {
         entry: {
             vendor: [
                 'bootstrap',
-                'bootstrap/dist/css/bootstrap.css',
+                'normalize.css',
+                'bootstrap/dist/css/bootstrap.css',                
                 'domain-task',
                 'event-source-polyfill',
                 'history',
+                'moment',
+                'rc-slider',
+                'rc-slider/assets/index.css',
                 'react',
                 'react-dom',
+                'react-datepicker',
+                'react-datepicker/dist/react-datepicker.css',
                 'react-router-dom',
                 'react-redux',
+                'react-swipeable',
                 'redux',
                 'redux-thunk',
                 'react-router-redux',
@@ -38,12 +45,15 @@ module.exports = (env) => {
             library: '[name]_[hash]',
         },
         plugins: [
-            new webpack.ProvidePlugin({ $: 'jquery', jQuery: 'jquery' }), // Maps these identifiers to the jQuery package (because Bootstrap expects it to be a global variable)
+            new webpack.ProvidePlugin({ $: 'jquery', jQuery: 'jquery'}), // Maps these identifiers to the jQuery package (because Bootstrap expects it to be a global variable)
             new webpack.NormalModuleReplacementPlugin(/\/iconv-loader$/, require.resolve('node-noop')), // Workaround for https://github.com/andris9/encoding/issues/16
             new webpack.DefinePlugin({
                 'process.env.NODE_ENV': isDevBuild ? '"development"' : '"production"'
             })
-        ]
+        ],
+        externals: {
+          Msal: 'Msal'
+        }
     };
 
     const clientBundleConfig = merge(sharedConfig, {
@@ -60,7 +70,7 @@ module.exports = (env) => {
                 name: '[name]_[hash]'
             })
         ].concat(isDevBuild ? [] : [
-            new webpack.optimize.UglifyJsPlugin()
+            //new webpack.optimize.UglifyJsPlugin()
         ])
     });
 
@@ -79,7 +89,8 @@ module.exports = (env) => {
             new webpack.DllPlugin({
                 path: path.join(__dirname, 'ClientApp', 'dist', '[name]-manifest.json'),
                 name: '[name]_[hash]'
-            })
+            }),
+            new webpack.ProvidePlugin({ window: 'global', XMLHttpRequest: 'node-fetch' }),
         ]
     });
 
