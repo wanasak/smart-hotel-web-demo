@@ -79,33 +79,31 @@ let getUserData = (accessToken: string): User => {
 // They don't directly mutate state, but they can have external side-effects (such as loading data).
 export const actionCreators = {
     init: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
-        userManager = new Msal.UserAgentApplication(client, authority, (errorDesc: any, token: any, error: any, tokenType: any) => {
-            if (token) {
-                 userManager.acquireTokenSilent(scopes).then(accessToken => {
-                    const userData = getUserData(accessToken);
-                    dispatch({ 
-                        type: 'SET_USER_ACTION', 
-                        id: userData.user.userIdentifier,
-                        name: userData.user.name,
-                        email: userData.email,
-                        gravatar: 'https://www.gravatar.com/avatar' + Md5.hashStr(userData.email.toLowerCase()).toString(),
-                        token: accessToken,
-                        isFake: false
-                    });
-                 }, error => {
-                    userManager.acquireTokenPopup(scopes).then(function (accessToken) {
+        userManager = new Msal.UserAgentApplication(client, authority,
+            (errorDesc: any, token: any, error: any, tokenType: any) => {
+                if (token) {
+                    userManager.acquireTokenSilent(scopes).then(accessToken => {
                         const userData = getUserData(accessToken);
                         dispatch({
                             type: 'SET_USER_ACTION', id: userData.user.userIdentifier, name: userData.user.name, email: userData.email, gravatar: 'https://www.gravatar.com/avatar/' + Md5.hashStr(userData.email.toLowerCase()).toString(), token: accessToken, isFake: false
                         });
-                    }, function (error) {
-                        dispatch({ type: 'SET_USER_ACTION', id: null, name: null, email: '', gravatar: '', token: '', isFake: false });
+                    }, error => {
+
+                        userManager.acquireTokenPopup(scopes).then(function (accessToken) {
+                            const userData = getUserData(accessToken);
+                            dispatch({
+                                type: 'SET_USER_ACTION', id: userData.user.userIdentifier, name: userData.user.name, email: userData.email, gravatar: 'https://www.gravatar.com/avatar/' + Md5.hashStr(userData.email.toLowerCase()).toString(), token: accessToken, isFake: false
+                            });
+                        }, function (error) {
+                            dispatch({ type: 'SET_USER_ACTION', id: null, name: null, email: '', gravatar: '', token: '', isFake: false });
+                        });
                     });
-                 });
-            } else {
-                dispatch({ type: 'INIT_ACTION', id: null, name: null, email: '', gravatar: '', token: '' });
-            }
-        });
+
+                } else {
+                    dispatch({ type: 'INIT_ACTION', id: null, name: null, email: '', gravatar: '', token: '' });
+                }
+            });
+        dispatch({ type: 'INIT_ACTION' });
     },
     login: (): AppThunkAction<KnownAction> => (dispatch, getState) => {
         if (useFakeAuth) {
